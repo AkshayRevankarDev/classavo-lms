@@ -2,10 +2,11 @@ import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/layout";
+import { InstructorLayout } from "@/components/instructor-layout";
+import { StudentLayout } from "@/components/student-layout";
 import { ProtectedRoute } from "@/components/protected-route";
-import { useAuth } from "@/hooks/use-auth";
 
+// Pages
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -13,8 +14,10 @@ import InstructorDashboard from "@/pages/instructor/dashboard";
 import InstructorCourseDetail from "@/pages/instructor/course-detail";
 import InstructorChapterEditor from "@/pages/instructor/chapter-editor";
 import StudentDashboard from "@/pages/student/dashboard";
+import StudentMyCourses from "@/pages/student/my-courses";
 import StudentCourseDetail from "@/pages/student/course-detail";
 import StudentChapterReader from "@/pages/student/chapter-reader";
+import { useAuth } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
 
@@ -34,48 +37,66 @@ function Router() {
 
       <Route path="/instructor">
         <ProtectedRoute allowedRole="instructor">
-          <Layout><InstructorDashboard /></Layout>
+          <InstructorLayout>
+            <InstructorDashboard />
+          </InstructorLayout>
         </ProtectedRoute>
       </Route>
+
       <Route path="/instructor/courses/:id">
         <ProtectedRoute allowedRole="instructor">
-          <Layout><InstructorCourseDetail /></Layout>
+          <InstructorLayout>
+            <InstructorCourseDetail />
+          </InstructorLayout>
         </ProtectedRoute>
       </Route>
+
       <Route path="/instructor/courses/:courseId/chapters/:chapterId">
         <ProtectedRoute allowedRole="instructor">
-          <Layout><InstructorChapterEditor /></Layout>
+          <InstructorChapterEditor />
         </ProtectedRoute>
       </Route>
 
       <Route path="/student">
         <ProtectedRoute allowedRole="student">
-          <Layout><StudentDashboard /></Layout>
+          <StudentLayout>
+            <StudentDashboard />
+          </StudentLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/student/my-courses">
+        <ProtectedRoute allowedRole="student">
+          <StudentLayout>
+            <StudentMyCourses />
+          </StudentLayout>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/student/courses/:id">
         <ProtectedRoute allowedRole="student">
-          <Layout><StudentCourseDetail /></Layout>
+          <StudentCourseDetail />
         </ProtectedRoute>
       </Route>
+
       <Route path="/student/courses/:courseId/chapters/:chapterId">
         <ProtectedRoute allowedRole="student">
-          <Layout><StudentChapterReader /></Layout>
+          <StudentChapterReader />
         </ProtectedRoute>
       </Route>
 
       <Route>
-        <Layout><NotFound /></Layout>
+        <NotFound />
       </Route>
     </Switch>
   );
 }
 
-export default function App() {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
         </WouterRouter>
         <Toaster />
@@ -83,3 +104,5 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+
+export default App;

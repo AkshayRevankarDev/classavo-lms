@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
-import { ArrowLeft, CheckCircle2, Circle, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Loader2,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -19,6 +25,7 @@ export default function ChapterReader() {
 
   const [course, setCourse] = useState<any>(null);
   const [chapter, setChapter] = useState<any>(null);
+  const [chapters, setChapters] = useState<any[]>([]);
   const [value, setValue] = useState<PlateValue>(EMPTY_VALUE);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
@@ -26,12 +33,17 @@ export default function ChapterReader() {
 
   const fetchChapterData = async () => {
     try {
-      const [courseRes, chapterRes] = await Promise.all([
+      setIsLoading(true);
+      const [courseRes, chapterRes, chaptersRes] = await Promise.all([
         api.get(`/courses/${courseId}/`),
         api.get(`/courses/${courseId}/chapters/${chapterId}/`),
+        api.get(`/courses/${courseId}/chapters/`),
       ]);
       setCourse(courseRes.data);
       setChapter(chapterRes.data);
+      setChapters(
+        chaptersRes.data.filter((c: any) => c.visibility === "public")
+      );
       setValue(normalizePlateValue(chapterRes.data.content));
       setCompleted(Boolean(chapterRes.data.completed));
     } catch (error) {
@@ -80,8 +92,8 @@ export default function ChapterReader() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -89,68 +101,127 @@ export default function ChapterReader() {
   const hasContent =
     Array.isArray(value) &&
     value.some((n: any) =>
-      n?.children?.some((c: any) => typeof c?.text === "string" && c.text.length > 0)
+      n?.children?.some(
+        (c: any) => typeof c?.text === "string" && c.text.length > 0
+      )
     );
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-muted/10 pb-20">
-      <div className="bg-background border-b sticky top-14 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-4 max-w-3xl flex items-center justify-between gap-4">
-          <div className="flex items-center min-w-0">
-            <Link
-              href={`/student/courses/${courseId}`}
-              className="mr-4 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div className="min-w-0">
-              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5 truncate">
-                {course?.name}
-              </div>
-              <h1 className="text-lg font-semibold leading-tight truncate">
-                {chapter?.title}
-              </h1>
-            </div>
-          </div>
-
-          <Button
-            variant={completed ? "secondary" : "default"}
-            size="sm"
-            disabled={marking}
-            onClick={toggleComplete}
-          >
-            {completed ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-600" />
-                Completed
-              </>
-            ) : (
-              <>
-                <Circle className="h-4 w-4 mr-2" />
-                Mark complete
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <article className="prose prose-neutral md:prose-lg max-w-none bg-background p-8 md:p-12 rounded-xl shadow-sm border">
-          <h1 className="text-4xl font-extrabold tracking-tight mb-8 pb-8 border-b">
+    <div className="flex flex-col h-screen bg-slate-50 overflow-hidden">
+      <header className="h-16 bg-white border-b border-border flex items-center px-4 md:px-6 sticky top-0 z-10 shrink-0">
+        <Link
+          href={`/student/courses/${courseId}`}
+          className="text-muted-foreground hover:text-primary transition-colors flex items-center text-sm font-medium mr-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Back to Course</span>
+        </Link>
+        <div className="h-6 w-px bg-border mx-2 hidden sm:block"></div>
+        <div className="flex items-center ml-2 truncate flex-1 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">
+            {course?.name}
+          </span>
+          <ChevronRight className="h-4 w-4 mx-2 text-muted-foreground shrink-0" />
+          <span className="text-sm text-muted-foreground truncate">
             {chapter?.title}
-          </h1>
+          </span>
+        </div>
 
-          {hasContent ? (
-            <div className="leading-relaxed text-foreground/90">
-              <PlateEditor value={value} resetKey={chapterId} readOnly />
-            </div>
+        <Button
+          size="sm"
+          variant={completed ? "secondary" : "default"}
+          disabled={marking}
+          onClick={toggleComplete}
+          className="ml-4 shrink-0"
+        >
+          {completed ? (
+            <>
+              <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-600" />
+              Completed
+            </>
           ) : (
-            <p className="text-muted-foreground italic">
-              This chapter has no content.
-            </p>
+            <>
+              <Circle className="h-4 w-4 mr-2" />
+              Mark complete
+            </>
           )}
-        </article>
-      </main>
+        </Button>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-72 bg-white border-r border-border hidden lg:flex flex-col overflow-y-auto">
+          <div className="p-4 border-b bg-slate-50/50 sticky top-0">
+            <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">
+              Chapters
+            </h3>
+          </div>
+          <nav className="p-3 space-y-1">
+            {chapters.map((ch, index) => {
+              const isActive = String(ch.id) === String(chapterId);
+              return (
+                <Link
+                  key={ch.id}
+                  href={`/student/courses/${courseId}/chapters/${ch.id}`}
+                >
+                  <div
+                    className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "hover:bg-slate-100 text-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                    <span
+                      className={`text-sm font-medium leading-tight ${
+                        isActive ? "text-white" : "text-slate-700"
+                      }`}
+                    >
+                      {ch.title}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <main className="flex-1 overflow-y-auto relative p-4 md:p-8 lg:p-12">
+          <article className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 lg:p-16 min-h-full">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-8 pb-8 border-b border-slate-100 leading-tight">
+              {chapter?.title}
+            </h1>
+
+            {hasContent ? (
+              <div className="prose prose-slate prose-lg max-w-none prose-p:leading-relaxed prose-p:text-slate-700">
+                <PlateEditor value={value} resetKey={chapterId} readOnly />
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground italic text-lg">
+                  This chapter has no content yet.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between">
+              <div />
+              <Link href={`/student/courses/${courseId}`}>
+                <Button variant="outline" className="text-slate-600">
+                  Return to Course
+                </Button>
+              </Link>
+            </div>
+          </article>
+        </main>
+      </div>
     </div>
   );
 }

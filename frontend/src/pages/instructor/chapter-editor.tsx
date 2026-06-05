@@ -26,13 +26,13 @@ export default function ChapterEditor() {
   const [title, setTitle] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [value, setValue] = useState<PlateValue>(EMPTY_VALUE);
-
-  // Latest editor value (avoids re-render on every keystroke).
   const valueRef = useRef<PlateValue>(EMPTY_VALUE);
 
   const fetchChapter = async () => {
     try {
-      const response = await api.get(`/courses/${courseId}/chapters/${chapterId}/`);
+      const response = await api.get(
+        `/courses/${courseId}/chapters/${chapterId}/`
+      );
       const chapter = response.data;
       setTitle(chapter.title);
       setIsPublic(chapter.visibility === "public");
@@ -52,9 +52,7 @@ export default function ChapterEditor() {
   };
 
   useEffect(() => {
-    if (courseId && chapterId) {
-      fetchChapter();
-    }
+    if (courseId && chapterId) fetchChapter();
   }, [courseId, chapterId]);
 
   const handleSave = async () => {
@@ -65,10 +63,7 @@ export default function ChapterEditor() {
         visibility: isPublic ? "public" : "private",
         content: valueRef.current,
       });
-      toast({
-        title: "Saved",
-        description: "Chapter has been updated successfully.",
-      });
+      toast({ title: "Saved", description: "Chapter has been updated." });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -82,16 +77,16 @@ export default function ChapterEditor() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
-      <div className="w-full md:w-80 border-r bg-muted/10 p-6 flex flex-col shrink-0 overflow-y-auto">
+      <aside className="w-full md:w-80 border-r bg-white p-6 flex flex-col shrink-0 overflow-y-auto">
         <div className="mb-6">
           <Link
             href={`/instructor/courses/${courseId}`}
@@ -112,11 +107,13 @@ export default function ChapterEditor() {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border p-4 bg-card">
+          <div className="flex items-center justify-between rounded-lg border p-4 bg-slate-50/60">
             <div className="space-y-0.5">
               <Label className="text-base">Visibility</Label>
               <p className="text-xs text-muted-foreground">
-                {isPublic ? "Students can see this." : "Hidden from students."}
+                {isPublic
+                  ? "Students can see this."
+                  : "Hidden from students."}
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
@@ -124,7 +121,11 @@ export default function ChapterEditor() {
         </div>
 
         <div className="pt-6 mt-auto border-t">
-          <Button onClick={handleSave} disabled={isSaving} className="w-full">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full bg-primary hover:bg-primary/90"
+          >
             {isSaving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -133,11 +134,11 @@ export default function ChapterEditor() {
             Save Changes
           </Button>
         </div>
-      </div>
+      </aside>
 
-      {/* Editor Area */}
-      <div className="flex-1 flex flex-col bg-background overflow-y-auto">
-        <div className="flex-1 p-6 lg:p-12 max-w-4xl mx-auto w-full">
+      {/* Editor */}
+      <main className="flex-1 overflow-y-auto bg-white">
+        <div className="p-6 lg:p-12 max-w-4xl mx-auto w-full">
           <PlateEditor
             value={value}
             resetKey={chapterId}
@@ -147,7 +148,7 @@ export default function ChapterEditor() {
             placeholder="Write your chapter content here…"
           />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

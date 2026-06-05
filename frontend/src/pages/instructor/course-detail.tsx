@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
-import { ArrowLeft, Plus, Eye, EyeOff, FileText, Pencil, Trash2, Users } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  EyeOff,
+  FileText,
+  Pencil,
+  Trash2,
+  Users as UsersIcon,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -61,11 +69,12 @@ export default function CourseDetail() {
   const [students, setStudents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dialog state
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
   const [isCourseEditOpen, setIsCourseEditOpen] = useState(false);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState(false);
-  const [deletingChapterId, setDeletingChapterId] = useState<number | null>(null);
+  const [deletingChapterId, setDeletingChapterId] = useState<number | null>(
+    null
+  );
 
   const chapterForm = useForm<z.infer<typeof chapterSchema>>({
     resolver: zodResolver(chapterSchema),
@@ -110,11 +119,16 @@ export default function CourseDetail() {
 
   async function onAddChapter(values: z.infer<typeof chapterSchema>) {
     try {
-      const response = await api.post(`/courses/${courseId}/chapters/`, values);
+      const response = await api.post(
+        `/courses/${courseId}/chapters/`,
+        values
+      );
       toast({ title: "Chapter created" });
       setIsChapterDialogOpen(false);
       chapterForm.reset();
-      setLocation(`/instructor/courses/${courseId}/chapters/${response.data.id}`);
+      setLocation(
+        `/instructor/courses/${courseId}/chapters/${response.data.id}`
+      );
     } catch (error) {
       toast({
         variant: "destructive",
@@ -170,43 +184,66 @@ export default function CourseDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <Skeleton className="h-8 w-24 mb-6" />
+      <div className="container mx-auto py-8 px-4 lg:px-8 max-w-5xl">
+        <Skeleton className="h-4 w-40 mb-6" />
         <Skeleton className="h-10 w-2/3 mb-4" />
         <Skeleton className="h-20 w-full mb-8" />
         <div className="space-y-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 lg:px-8 max-w-5xl">
       <div className="mb-6">
-        <Link
-          href="/instructor"
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Courses
-        </Link>
+        <nav className="flex text-sm text-muted-foreground font-medium">
+          <Link
+            href="/instructor"
+            className="hover:text-primary transition-colors"
+          >
+            My Courses
+          </Link>
+          <span className="mx-2 text-border">/</span>
+          <span className="text-foreground">{course?.name}</span>
+        </nav>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">{course?.name}</h1>
-          <p className="text-muted-foreground max-w-2xl">{course?.description}</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b pb-8">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold tracking-tight mb-3 text-foreground">
+            {course?.name}
+          </h1>
+          <p className="text-muted-foreground max-w-3xl text-lg">
+            {course?.description}
+          </p>
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary hover:bg-primary/20 font-medium px-3 py-1"
+            >
+              {chapters.length}{" "}
+              {chapters.length === 1 ? "Chapter" : "Chapters"}
+            </Badge>
+            <Badge
+              variant="secondary"
+              className="bg-slate-100 text-slate-700 hover:bg-slate-100 font-medium px-3 py-1"
+            >
+              <UsersIcon className="h-3 w-3 mr-1" />
+              {students.length}{" "}
+              {students.length === 1 ? "Student" : "Students"}
+            </Badge>
+          </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          {/* Edit course */}
+        <div className="flex gap-2 flex-wrap shrink-0">
           <Dialog open={isCourseEditOpen} onOpenChange={setIsCourseEditOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit Course
+                Edit
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -255,7 +292,6 @@ export default function CourseDetail() {
             </DialogContent>
           </Dialog>
 
-          {/* Delete course */}
           <AlertDialog
             open={confirmDeleteCourse}
             onOpenChange={setConfirmDeleteCourse}
@@ -272,8 +308,9 @@ export default function CourseDetail() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete this course?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently remove the course and all of its chapters.
-                  Students who joined will lose access. This action cannot be undone.
+                  This will permanently remove the course and all of its
+                  chapters. Students who joined will lose access. This action
+                  cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -288,25 +325,28 @@ export default function CourseDetail() {
             </AlertDialogContent>
           </AlertDialog>
 
-          {/* Add chapter */}
-          <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
+          <Dialog
+            open={isChapterDialogOpen}
+            onOpenChange={setIsChapterDialogOpen}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Chapter
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add a new chapter</DialogTitle>
                 <DialogDescription>
-                  Create a new chapter for this course. You can write the content next.
+                  Create a new chapter for this course. You can write the
+                  content next.
                 </DialogDescription>
               </DialogHeader>
               <Form {...chapterForm}>
                 <form
                   onSubmit={chapterForm.handleSubmit(onAddChapter)}
-                  className="space-y-4"
+                  className="space-y-4 mt-4"
                 >
                   <FormField
                     control={chapterForm.control}
@@ -315,14 +355,19 @@ export default function CourseDetail() {
                       <FormItem>
                         <FormLabel>Chapter Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Chapter 1: Getting Started" {...field} />
+                          <Input
+                            placeholder="Chapter 1: Getting Started"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <DialogFooter>
-                    <Button type="submit">Create Chapter</Button>
+                  <DialogFooter className="mt-6">
+                    <Button type="submit" className="w-full">
+                      Create Chapter
+                    </Button>
                   </DialogFooter>
                 </form>
               </Form>
@@ -331,31 +376,38 @@ export default function CourseDetail() {
         </div>
       </div>
 
-      <div className="bg-card border rounded-lg overflow-hidden">
-        <div className="p-4 bg-muted/30 border-b">
-          <h2 className="font-semibold">Course Curriculum</h2>
-        </div>
+      {/* Curriculum */}
+      <div className="mb-10">
+        <h2 className="text-xl font-semibold mb-6">Course Curriculum</h2>
 
         {chapters.length > 0 ? (
-          <div className="divide-y">
+          <div className="bg-white rounded-xl border shadow-sm overflow-hidden divide-y divide-slate-100">
             {chapters.map((chapter, index) => (
               <div
                 key={chapter.id}
-                className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors"
+                className="p-4 sm:p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-medium text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-semibold text-sm">
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="font-medium">{chapter.title}</h3>
+                    <h3 className="font-medium text-base text-foreground group-hover:text-primary transition-colors">
+                      {chapter.title}
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
                       {chapter.visibility === "public" ? (
-                        <Badge variant="secondary" className="text-xs font-normal">
+                        <Badge
+                          variant="secondary"
+                          className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs font-medium"
+                        >
                           <Eye className="mr-1 h-3 w-3" /> Public
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-xs font-normal">
+                        <Badge
+                          variant="secondary"
+                          className="bg-slate-100 text-slate-600 hover:bg-slate-100 text-xs font-medium"
+                        >
                           <EyeOff className="mr-1 h-3 w-3" /> Private
                         </Badge>
                       )}
@@ -366,7 +418,12 @@ export default function CourseDetail() {
                   <Link
                     href={`/instructor/courses/${courseId}/chapters/${chapter.id}`}
                   >
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-slate-500 hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                   </Link>
@@ -384,21 +441,33 @@ export default function CourseDetail() {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
-            <FileText className="h-10 w-10 mb-3 opacity-20" />
-            <p>No chapters yet.</p>
-            <p className="text-sm mt-1">
-              Click "Add Chapter" to start building your course.
+          <div className="p-16 text-center bg-white rounded-xl border border-dashed shadow-sm flex flex-col items-center">
+            <div className="bg-slate-50 p-4 rounded-full mb-4">
+              <FileText className="h-8 w-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              No chapters yet
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              Start building your course curriculum by adding your first
+              chapter.
             </p>
+            <Button
+              onClick={() => setIsChapterDialogOpen(true)}
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Chapter
+            </Button>
           </div>
         )}
       </div>
 
       {/* Enrolled students */}
-      <div className="bg-card border rounded-lg overflow-hidden mt-8">
-        <div className="p-4 bg-muted/30 border-b flex items-center justify-between">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Users className="h-4 w-4" />
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <UsersIcon className="h-5 w-5 text-primary" />
             Enrolled students
           </h2>
           <span className="text-sm text-muted-foreground">
@@ -407,7 +476,7 @@ export default function CourseDetail() {
         </div>
 
         {students.length > 0 ? (
-          <div className="divide-y">
+          <div className="bg-white rounded-xl border shadow-sm overflow-hidden divide-y divide-slate-100">
             {students.map((row) => {
               const initials = (row.student?.username || "?")
                 .slice(0, 2)
@@ -415,36 +484,43 @@ export default function CourseDetail() {
               return (
                 <div
                   key={row.id}
-                  className="p-4 flex items-center gap-4 hover:bg-muted/10 transition-colors"
+                  className="p-4 sm:p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors"
                 >
-                  <Avatar className="h-9 w-9">
+                  <Avatar className="h-10 w-10">
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">
+                    <div className="font-medium truncate text-foreground">
                       {row.student?.username}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
                       {row.student?.email}
                     </div>
                   </div>
-                  <div className="w-40 shrink-0">
+                  <div className="w-44 shrink-0">
                     <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                       <span>
                         {row.progress.completed}/{row.progress.total}
                       </span>
                       <span>{row.progress.percent}%</span>
                     </div>
-                    <Progress value={row.progress.percent} className="h-1.5" />
+                    <Progress
+                      value={row.progress.percent}
+                      className="h-1.5"
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
-            <Users className="h-8 w-8 mb-3 opacity-20" />
-            <p className="text-sm">No students have joined yet.</p>
+          <div className="p-12 text-center bg-white rounded-xl border border-dashed shadow-sm flex flex-col items-center">
+            <div className="bg-slate-50 p-4 rounded-full mb-4">
+              <UsersIcon className="h-8 w-8 text-slate-400" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              No students have joined yet.
+            </p>
           </div>
         )}
       </div>
@@ -458,14 +534,16 @@ export default function CourseDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this chapter?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove the chapter and its content. This action
-              cannot be undone.
+              This will permanently remove the chapter and its content. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletingChapterId && onDeleteChapter(deletingChapterId)}
+              onClick={() =>
+                deletingChapterId && onDeleteChapter(deletingChapterId)
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete chapter

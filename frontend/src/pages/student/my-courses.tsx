@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Book, Users, ChevronRight, Loader2 } from "lucide-react";
+import { Link } from "wouter";
+import { Users, ChevronRight, Compass, BookMarked } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +22,11 @@ const GRADIENTS = [
   "from-pink-400 to-rose-600",
 ];
 
-export default function StudentDashboard() {
+export default function StudentMyCourses() {
   const [courses, setCourses] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [joiningId, setJoiningId] = useState<any>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
   const fetchData = async () => {
     try {
@@ -43,7 +41,7 @@ export default function StudentDashboard() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load courses.",
+        description: "Failed to load your courses.",
       });
     } finally {
       setIsLoading(false);
@@ -58,68 +56,41 @@ export default function StudentDashboard() {
     enrollments.find(
       (e) => e.course === courseId || e.course?.id === courseId
     );
-  const isEnrolled = (courseId: any) => Boolean(enrollmentFor(courseId));
-
-  const handleJoin = async (courseId: any) => {
-    try {
-      setJoiningId(courseId);
-      await api.post(`/courses/${courseId}/enroll/`, {});
-      toast({
-        title: "Success",
-        description: "You have enrolled in the course!",
-      });
-      const enrollmentsRes = await api.get("/my-enrollments/");
-      setEnrollments(enrollmentsRes.data);
-      setLocation(`/student/courses/${courseId}`);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to enroll in the course.",
-      });
-    } finally {
-      setJoiningId(null);
-    }
-  };
+  const enrolledCourseIds = new Set(
+    enrollments.map((e) => e.course?.id ?? e.course)
+  );
+  const myCourses = courses.filter((c) => enrolledCourseIds.has(c.id));
 
   return (
     <div className="container mx-auto py-8 px-4 lg:px-8 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-          Discover Courses
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">My Courses</h1>
         <p className="text-muted-foreground">
-          Find and enroll in courses to expand your knowledge.
+          Continue learning from where you left off.
         </p>
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl shadow-sm border overflow-hidden"
-            >
-              <Skeleton className="h-36 w-full rounded-none" />
-              <div className="p-5">
-                <Skeleton className="h-6 w-3/4 mb-3" />
-                <Skeleton className="h-4 w-full mb-2" />
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-2/3" />
-              </div>
-              <div className="p-4 border-t bg-slate-50/50">
+              </CardHeader>
+              <CardFooter className="bg-muted/50 p-4 border-t">
                 <Skeleton className="h-9 w-full" />
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           ))}
         </div>
-      ) : courses.length > 0 ? (
+      ) : myCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course, index) => {
-            const enrolled = isEnrolled(course.id);
-            const enr = enrolled ? enrollmentFor(course.id) : null;
+          {myCourses.map((course, index) => {
+            const enr = enrollmentFor(course.id);
             const p = enr?.progress;
             const bg = GRADIENTS[index % GRADIENTS.length];
-
             return (
               <Card
                 key={course.id}
@@ -133,13 +104,13 @@ export default function StudentDashboard() {
                   <CardDescription className="line-clamp-2 mt-2 text-sm text-muted-foreground">
                     {course.description}
                   </CardDescription>
-                  <div className="mt-4 flex items-center text-sm font-medium text-slate-600 bg-slate-100 w-fit px-3 py-1 rounded-full">
-                    <Users className="h-3.5 w-3.5 mr-1.5" />
+                  <div className="mt-4 flex items-center text-sm text-muted-foreground">
+                    <Users className="h-4 w-4 mr-2" />
                     <span>{course.instructor?.username || "Unknown"}</span>
                   </div>
                 </CardHeader>
                 <CardFooter className="bg-white p-4 border-t flex-col gap-3 items-stretch">
-                  {enrolled && p && p.total > 0 && (
+                  {p && p.total > 0 && (
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>
@@ -150,46 +121,40 @@ export default function StudentDashboard() {
                       <Progress value={p.percent} className="h-2" />
                     </div>
                   )}
-                  {enrolled ? (
-                    <Link
-                      href={`/student/courses/${course.id}`}
-                      className="w-full"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full group border-primary text-primary hover:bg-primary/5"
-                      >
-                        Continue Learning
-                        <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
-                  ) : (
+                  <Link
+                    href={`/student/courses/${course.id}`}
+                    className="w-full"
+                  >
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90 text-white"
-                      onClick={() => handleJoin(course.id)}
-                      disabled={joiningId === course.id}
+                      variant="outline"
+                      className="w-full group border-primary text-primary hover:bg-primary/5"
                     >
-                      {joiningId === course.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
-                      Join Course
+                      Continue Learning
+                      <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                  )}
+                  </Link>
                 </CardFooter>
               </Card>
             );
           })}
         </div>
       ) : (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed shadow-sm">
-          <Book className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2 text-foreground">
-            No courses available
+        <div className="text-center py-20 bg-white rounded-xl border shadow-sm">
+          <div className="bg-primary/5 p-4 rounded-full inline-block mb-4">
+            <BookMarked className="h-12 w-12 text-primary opacity-80" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">
+            You haven't joined any courses
           </h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Check back later. Instructors are currently working on new
-            materials.
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+            Browse the available courses and enroll to start learning.
           </p>
+          <Link href="/student">
+            <Button>
+              <Compass className="h-4 w-4 mr-2" />
+              Browse Courses
+            </Button>
+          </Link>
         </div>
       )}
     </div>

@@ -3,13 +3,11 @@ import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { BookOpen } from "lucide-react";
+import { BookOpen, GraduationCap, Presentation, Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -34,6 +32,8 @@ export default function Register() {
     },
   });
 
+  const selectedRole = form.watch("role");
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
@@ -56,95 +56,109 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-slate-50 p-4 py-12">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <BookOpen className="h-8 w-8 text-primary" />
+            <div className="bg-primary p-3 rounded-full shadow-md">
+              <BookOpen className="h-6 w-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Create an account</CardTitle>
-          <CardDescription>Sign up to start learning or teaching</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="johndoe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="name@example.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input placeholder="••••••••" type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>I am a...</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="student">Student (Learning)</SelectItem>
-                        <SelectItem value="instructor">Instructor (Teaching)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Register"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Create an account</h1>
+          <p className="text-muted-foreground mt-2">Sign up to start learning or teaching</p>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">I am a...</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div 
+                  onClick={() => form.setValue("role", "student")}
+                  className={`relative flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition-all ${
+                    selectedRole === "student" 
+                      ? "border-primary bg-primary/5 shadow-sm" 
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {selectedRole === "student" && <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />}
+                  <GraduationCap className={`h-8 w-8 mb-2 ${selectedRole === "student" ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className={`font-semibold ${selectedRole === "student" ? "text-primary" : "text-foreground"}`}>Student</span>
+                  <span className="text-xs text-muted-foreground text-center mt-1">I want to learn</span>
+                </div>
+                
+                <div 
+                  onClick={() => form.setValue("role", "instructor")}
+                  className={`relative flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer border-2 transition-all ${
+                    selectedRole === "instructor" 
+                      ? "border-primary bg-primary/5 shadow-sm" 
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {selectedRole === "instructor" && <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />}
+                  <Presentation className={`h-8 w-8 mb-2 ${selectedRole === "instructor" ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className={`font-semibold ${selectedRole === "instructor" ? "text-primary" : "text-foreground"}`}>Instructor</span>
+                  <span className="text-xs text-muted-foreground text-center mt-1">I want to teach</span>
+                </div>
+              </div>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="johndoe" className="bg-slate-50 border-slate-200" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="name@example.com" type="email" className="bg-slate-50 border-slate-200" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="••••••••" type="password" className="bg-slate-50 border-slate-200" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm mt-4" disabled={isLoading}>
+              {isLoading ? "Creating account..." : "Register"}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
               Log in
             </Link>
           </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
