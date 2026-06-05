@@ -45,7 +45,22 @@ export default function ChapterReader() {
         chaptersRes.data.filter((c: any) => c.visibility === "public")
       );
       setValue(normalizePlateValue(chapterRes.data.content));
-      setCompleted(Boolean(chapterRes.data.completed));
+
+      const alreadyComplete = Boolean(chapterRes.data.completed);
+      setCompleted(alreadyComplete);
+
+      // Auto-mark as visited the first time a student opens the chapter.
+      // Fire-and-forget — we don't block the reader on this, and silently
+      // swallow errors (the explicit "Mark complete" button is the fallback).
+      if (!alreadyComplete) {
+        api
+          .post(
+            `/courses/${courseId}/chapters/${chapterId}/complete/`,
+            {}
+          )
+          .then(() => setCompleted(true))
+          .catch(() => {});
+      }
     } catch (error) {
       toast({
         variant: "destructive",

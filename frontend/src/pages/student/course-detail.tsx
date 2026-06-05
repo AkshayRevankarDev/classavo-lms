@@ -260,21 +260,35 @@ export default function StudentCourseDetail() {
             </p>
           </div>
 
-          {chapters.length > 0 && (
-            <div className="mt-12">
-              <Link
-                href={`/student/courses/${courseId}/chapters/${chapters[0].id}`}
-              >
-                <Button
-                  size="lg"
-                  className="bg-primary hover:bg-primary/90 text-white font-medium px-8 h-12 text-base rounded-full shadow-md"
+          {chapters.length > 0 && (() => {
+            const firstIncompleteIndex = chapters.findIndex(
+              (c) => !progress.completed_chapter_ids.includes(c.id)
+            );
+            const allDone = firstIncompleteIndex === -1;
+            const targetIndex = allDone ? 0 : firstIncompleteIndex;
+            const target = chapters[targetIndex];
+            const noneStarted = progress.completed === 0;
+            const label = allDone
+              ? "Review from Chapter 1"
+              : noneStarted
+              ? `Start Reading Chapter ${targetIndex + 1}`
+              : `Continue with Chapter ${targetIndex + 1}`;
+            return (
+              <div className="mt-12">
+                <Link
+                  href={`/student/courses/${courseId}/chapters/${target.id}`}
                 >
-                  Start Reading Chapter 1
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          )}
+                  <Button
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-white font-medium px-8 h-12 text-base rounded-full shadow-md"
+                  >
+                    {label}
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+            );
+          })()}
         </div>
       </main>
     </div>
