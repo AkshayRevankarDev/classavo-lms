@@ -53,6 +53,36 @@ The API serves at `http://localhost:8000/api/`.
 
 Optional admin: `.venv/bin/python manage.py createsuperuser`.
 
+#### Seed demo data
+
+To populate the app with realistic AI-themed courses, instructors, students and
+progress for evaluating the demo:
+
+```bash
+.venv/bin/python manage.py seed_demo
+# or, to wipe demo objects first:
+.venv/bin/python manage.py seed_demo --reset
+```
+
+This creates 3 instructors, 5 students, and 8 courses (Intro to ML, Deep
+Learning with PyTorch, LLMs in Practice, NLP with Transformers, Computer
+Vision, Reinforcement Learning, MLOps, AI Ethics) — each with a mix of public
+and private chapters in real Plate.js format, plus enrolments and partial
+chapter-completion progress.
+
+Password for every demo account: `Demo1234!`. Example logins:
+
+| Role | Email |
+|---|---|
+| Instructor | `sarah.chen@example.com` |
+| Instructor | `michael.torres@example.com` |
+| Instructor | `priya.sharma@example.com` |
+| Student | `emma.wilson@example.com` |
+| Student | `david.kim@example.com` |
+| Student | `olivia.martinez@example.com` |
+| Student | `james.lee@example.com` |
+| Student | `aisha.patel@example.com` |
+
 ### 2. Frontend
 
 ```bash
