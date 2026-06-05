@@ -28,11 +28,33 @@ class MeView(generics.RetrieveAPIView):
 
 
 class CourseViewSet(viewsets.ModelViewSet):
-    """CRUD for courses. List returns all courses to any authenticated user."""
+    """CRUD for courses.
+
+    * Instructors listing `/courses/` see only the courses they own.
+    * Students listing `/courses/` see the full catalogue (for browsing).
+    * `retrieve`, `update` and `destroy` still resolve any course by id;
+      object-level checks below enforce ownership for writes, and the
+      chapter detail view enforces public/private for reads.
+    """
 
     serializer_class = CourseSerializer
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Course.objects.select_related("instructor").all().order_by("-created_at")
+
+    def get_queryset(self):
+        qs = (
+            Course.objects.select_related("instructor")
+            .all()
+            .order_by("-created_at")
+        )
+        user = self.request.user
+        if (
+            self.action == "list"
+            and user
+            and user.is_authenticated
+            and user.is_instructor
+        ):
+            qs = qs.filter(instructor=user)
+        return qs
 
     def perform_create(self, serializer):
         if not self.request.user.is_instructor:
